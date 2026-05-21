@@ -14,7 +14,7 @@ def delivery_report(err, msg):
 unix_time = int(time.time())
 print(unix_time)
 
-message='{"chassis_id" : "1" , "chassis_number":"number_1"}'
+message='{"chassis_id" : "1" , "chassis_number":"number_10"}'
 print(message)
 # Produce a message
 p.produce(topic='input_topic', value=message, timestamp = unix_time, callback=delivery_report)
