@@ -3,15 +3,16 @@ from apache_beam.io.kafka import ReadFromKafka, WriteToKafka
 from apache_beam.options.pipeline_options import PipelineOptions, StandardOptions
 import time
 import json 
+import time
 
 consumer_config = {
     "bootstrap.servers": "localhost:9092",
-    "group.id": f"beam-{int(time.time())}",
+    "group.id": "consumer-group-1",
     "auto.offset.reset": "earliest",
 }
 
 options = PipelineOptions()
-options.view_as(StandardOptions).streaming = True
+#options.view_as(StandardOptions).streaming = True
 
 
 class DecodeMessage(beam.DoFn):
@@ -45,7 +46,8 @@ with beam.Pipeline() as p:
             topics=["input_topic"],
             max_num_records=1,
             with_metadata=True,
-            expansion_service="localhost:8097"
+            expansion_service="localhost:8097",
+            start_read_time=1779323662
         )
         | "DecodeMessage" >> beam.ParDo(DecodeMessage())
         | "ProcessMessage" >> beam.ParDo(ProcessMessage())
