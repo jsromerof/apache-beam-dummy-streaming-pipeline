@@ -39,12 +39,20 @@ consumer_config_kafka_local = {
     "enable.auto.commit": "true"
 }
 
+
+KAFKA_BOOTSTRAP_SERVERS="prod-broker.us-west1.gcp.confluent.cloud:9092"
+CONSUMER_GROUP_ID="consumer-group-1"
+KAFKA_USERNAME="username"
+KAFKA_PASSWORD="password"
+SECURITY_PROTOCOL="SASL_SSL"
+SASL_MECHANISM="PLAIN"
+
 consumer_config_kafka_cloud = {
-    "bootstrap.servers": "pkc-lgk0v.us-west1.gcp.confluent.cloud:9092",
-    "group.id": "k_itd_ren_saptm_dev_svc_asicustomer",
-    "sasl.jaas.config": 'org.apache.kafka.common.security.plain.PlainLoginModule required serviceName="Kafka" username="username" password="password";',
-    "security.protocol": "SASL_SSL",
-    "sasl.mechanism": "PLAIN",
+    "bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS,
+    "group.id": CONSUMER_GROUP_ID,
+    "sasl.jaas.config": f'org.apache.kafka.common.security.plain.PlainLoginModule required serviceName="Kafka" username="{KAFKA_USERNAME}" password="{KAFKA_PASSWORD}";',
+    "security.protocol": SECURITY_PROTOCOL,
+    "sasl.mechanism": SASL_MECHANISM,
     "auto.offset.reset": "earliest",
     "enable.auto.commit": "false"
 }
