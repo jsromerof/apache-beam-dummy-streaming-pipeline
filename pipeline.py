@@ -32,24 +32,48 @@ class EncodeMessage(beam.DoFn):
         yield encoded_message
 
 
-consumer_config = {
+consumer_config_kafka_local = {
     "bootstrap.servers": "localhost:9092",
     "group.id": "consumer-group-1",
     "auto.offset.reset": "latest",
     "enable.auto.commit": "true"
 }
 
-options = PipelineOptions([
+consumer_config_kafka_cloud = {
+    "bootstrap.servers": "pkc-lgk0v.us-west1.gcp.confluent.cloud:9092",
+    "group.id": "k_itd_ren_saptm_dev_svc_asicustomer",
+    "sasl.jaas.config": 'org.apache.kafka.common.security.plain.PlainLoginModule required serviceName="Kafka" username="username" password="password";',
+    "security.protocol": "SASL_SSL",
+    "sasl.mechanism": "PLAIN",
+    "auto.offset.reset": "earliest",
+    "enable.auto.commit": "false"
+}
+
+local_runner_options = PipelineOptions([
     "--runner=DirectRunner",
-    #"--direct_num_workers=1",
-    #"--direct_running_mode=in_memory"
+    "--direct_num_workers=1",
+    "--direct_running_mode=in_memory"
 ])
 
-with beam.Pipeline(options=options) as p:
+STAGING_BUCKET="staging_bucket_poc" # Replace with your GCS bucket name
+TEMP_BUCKET="temp_bucket_poc" 
+
+dataflow_options = PipelineOptions([
+    '--project=poc-project',
+    '--region=us-west2',
+    '--job_name=kafka-batch-processing-poc',
+    '--staging_location=gs://{0}/'.format(STAGING_BUCKET),
+    '--temp_location=gs://{0}/'.format(TEMP_BUCKET),
+    '--network=gcp-dev-vpc',
+    '--subnetwork=regions/us-west2/subnetworks/gcp-dev-subnet3',
+    '--runner=DataflowRunner'
+])
+
+with beam.Pipeline(options=local_runner_options) as p:
     (
         p
         | ReadFromKafka(
-            consumer_config=consumer_config,
+            consumer_config=consumer_config_kafka_local,
             topics=["input_topic"],
             max_num_records=3,
             with_metadata=True,
