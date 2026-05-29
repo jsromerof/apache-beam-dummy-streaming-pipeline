@@ -13,11 +13,9 @@ topics:
           creation_date: creation_date
           last_update_date: last_update_date
           # Nested target object from flat/nested source
-          address:
-            street1: address.street1
-            street2: address.street2
-            street3: address.street3
-            location:
-              postal_code: address.postal_code
-              city: address.city
-              country: address.country
+          street1: address.street1
+          street2: address.street2
+          street3: address.street3
+          postal_code: address.postal_code
+          city: address.city
+          country: address.country

@@ -97,7 +97,7 @@ topics = list(mapping_config.keys())
     
 
 with beam.Pipeline(options=local_runner_options) as p:
-    (
+    ( 
         p
         | ReadFromKafka(
             consumer_config=consumer_config_kafka_local,
