@@ -79,34 +79,44 @@ mapping_config = {
             }
         }
 
-def load_mapping_dict(config_path: str, mapping_name: str) -> dict:
-        mapping_config = {}
-        with open(config_path, "r") as file:
-            config = yaml.safe_load(file)
-            
-            for item in config.get("topics", []):
-                mapping_config[item["topic"]] = item["standardization_mapping"]
 
-        if mapping_name not in config:
-            raise KeyError(f"Mapping '{mapping_name}' not found in {config_path}")
+def get_config_file(file_path):
+    with open(file_path, "r") as file:
+        config = yaml.safe_load(file)
+    return config
+
+
+def load_mapping_dict(config: dict) -> dict:
+        mapping_config = {}       
+        for item in config.get("topics", []):
+            mapping_config[item["topic"]] = item["standardization_mapping"]
         
         return mapping_config
     
-mapping_config = load_mapping_dict(config_path="config/local.yaml", mapping_name="topics")
+config=get_config_file("config/local.yaml")
+mapping_config = load_mapping_dict(config=config)
 topics = list(mapping_config.keys())
     
 
 with beam.Pipeline(options=local_runner_options) as p:
-    ( 
-        p
-        | ReadFromKafka(
-            consumer_config=consumer_config_kafka_local,
-            topics= topics,
-            max_num_records=1,
-            with_metadata=True,
-            expansion_service="localhost:8097"
+    kafka_streams_pcoll = ()
+    kafka_consumer_config = config["kafka_consumer_config"]
+    for topic in config["topics"]:
+        kafka_input_stream = (
+            p
+            | "Read from {0}".format(topic["topic"]) >> ReadFromKafka(
+                consumer_config=kafka_consumer_config + topic["consumer_group"],
+                topics=[topic["topic"]],
+                max_num_records=1,
+                with_metadata=True,
+                expansion_service="localhost:8097"
+            )
+            | "Decode Message from {0}".format(topic["topic"]) >> beam.ParDo(DecodeMessage())
         )
-        | "DecodeMessage" >> beam.ParDo(DecodeMessage())
+        kafka_streams_pcoll+=(kafka_input_stream,)
+    ( 
+        kafka_streams_pcoll 
+        | "PCollection Flatten" >> beam.Flatten()
         | "StandardizeSchema" >> beam.ParDo(SchemaStandardizer(mapping_config=mapping_config))
         | "EncodeMessage" >> beam.ParDo(EncodeMessage()).with_output_types(tuple[bytes, bytes])
         | WriteToKafka(

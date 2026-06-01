@@ -1,5 +1,15 @@
+app_name: "supplier_data_pipeline"
+version: "1.0.0"
+environment: "development"  # development, staging, production
+
+kafka_consumer_config:
+  bootstrap.servers": localhost:9092
+  auto.offset.reset": latest
+  enable.auto.commit": true
+  
 topics:
-  - topic: "input_topic"
+  - topic: "leyland_topic"
+    consumer_group: "leyland_consumer_group"
     standardization_mapping:
       id: supplier_id
       name: supplier_name
@@ -12,7 +22,27 @@ topics:
           DAF_code: DAF_vendor_code
           creation_date: creation_date
           last_update_date: last_update_date
-          # Nested target object from flat/nested source
+          street1: address.street1
+          street2: address.street2
+          street3: address.street3
+          postal_code: address.postal_code
+          city: address.city
+          country: address.country
+
+  - topic: "australia_topic"
+    consumer_group: "australia_consumer_group"
+    standardization_mapping:
+      id: supplier_id
+      name: supplier_name
+      vendor_list:
+        _source: supplier_data
+        _items:
+          vendor: vendor_id
+          name: vendor_name
+          leyland_code: leyland_vendor_code
+          DAF_code: DAF_vendor_code
+          creation_date: creation_date
+          last_update_date: last_update_date
           street1: address.street1
           street2: address.street2
           street3: address.street3
