@@ -78,9 +78,9 @@ dataflow_options.view_as(StandardOptions).streaming = True
 kafka_input_topics = ["input_topic_1", "input_topic_2"]
 
 with beam.Pipeline(options=local_runner_options) as p:
-    kafka_inputs_pcoll = ()
+    kafka_streams_pcoll = ()
     for topic in kafka_input_topics:
-        input = (
+        input_stream = (
             p
             | "Read from {0}".format(topic) >> ReadFromKafka(
                 consumer_config=consumer_config_kafka_local,
@@ -91,10 +91,10 @@ with beam.Pipeline(options=local_runner_options) as p:
             )
             | "Decode Message from {0}".format(topic) >> beam.ParDo(DecodeMessage())
         )
-        kafka_inputs_pcoll+=(input,)
+        kafka_streams_pcoll+=(input_stream,)
         
     (
-        kafka_inputs_pcoll 
+        kafka_streams_pcoll 
         | "PCollection Flatten" >> beam.Flatten()
         | "ProcessMessage" >> beam.ParDo(ProcessMessage())
         | "EncodeMessage" >> beam.ParDo(EncodeMessage()).with_output_types(tuple[bytes, bytes])
