@@ -75,17 +75,27 @@ dataflow_options = PipelineOptions([
 
 dataflow_options.view_as(StandardOptions).streaming = True
 
+kafka_input_topics = ["input_topic_1", "input_topic_2"]
+
 with beam.Pipeline(options=local_runner_options) as p:
-    (
-        p
-        | ReadFromKafka(
-            consumer_config=consumer_config_kafka_local,
-            topics=["input_topic"],
-            max_num_records=1,
-            with_metadata=True,
-            expansion_service="localhost:8097"
+    kafka_inputs_pcoll = ()
+    for topic in kafka_input_topics:
+        input = (
+            p
+            | "Read from {0}".format(topic) >> ReadFromKafka(
+                consumer_config=consumer_config_kafka_local,
+                topics=[topic],
+                max_num_records=1,
+                with_metadata=True,
+                expansion_service="localhost:8097"
+            )
+            | "Decode Message from {0}".format(topic) >> beam.ParDo(DecodeMessage())
         )
-        | "DecodeMessage" >> beam.ParDo(DecodeMessage())
+        kafka_inputs_pcoll+=(input,)
+        
+    (
+        kafka_inputs_pcoll 
+        | "PCollection Flatten" >> beam.Flatten()
         | "ProcessMessage" >> beam.ParDo(ProcessMessage())
         | "EncodeMessage" >> beam.ParDo(EncodeMessage()).with_output_types(tuple[bytes, bytes])
         | WriteToKafka(
