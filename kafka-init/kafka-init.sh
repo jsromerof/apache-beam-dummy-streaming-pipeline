@@ -1,5 +1,5 @@
 kafka-topics --bootstrap-server kafka:29092 --list
-topics='["input_topic_1", "input_topic_2", "output_topic"]'
+topics='["input_topic", "output_topic"]'
 
 echo "Creating kafka topics...{$topics}"
 

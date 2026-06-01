@@ -11,7 +11,16 @@ def delivery_report(err, msg):
         print(f'Message delivered to {msg.topic()} [{msg.partition()}]')
 
 # Produce a message
-p.produce('input_topic_2', '{"chassis_id" : "1" , "chassis_number":"number_1"}', callback=delivery_report)
+p.produce('input_topic', 
+        """{
+            "supplier_id" : "1", 
+            "supplier_number":"number_1", 
+            "supplier_name":"name_1", 
+            "is_locked":false, 
+            "load_date_time":"2023-01-01T00:00:00Z", 
+            "update_date_time":"2023-01-01T00:00:10Z"
+        }""", 
+        callback=delivery_report)
 
 # Wait for any outstanding messages to be delivered
 p.flush()

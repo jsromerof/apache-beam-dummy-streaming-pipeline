@@ -1,8 +1,9 @@
 import apache_beam as beam
 from apache_beam.io.kafka import ReadFromKafka, WriteToKafka
 from apache_beam.options.pipeline_options import PipelineOptions, StandardOptions
-import time
 import json 
+import psycopg
+from psycopg.rows import dict_row
 
 class DecodeMessage(beam.DoFn):
     
@@ -14,16 +15,44 @@ class DecodeMessage(beam.DoFn):
         
 class ProcessMessage(beam.DoFn):
     
+    def __init__(self, uri=None):
+        super().__init__()
+        self.uri = uri
+
     def process(self, element):
-        element['processed_timestamp'] = time.time()
-        element['status'] = 'processed'
-        yield element
-    
+        with psycopg.connect(self.uri, row_factory=dict_row) as conn:
+            with conn.cursor() as cur:
+                cur.execute(f"""INSERT INTO SUPPLIER(SUPPLIER_ID, SUPPLIER_NUMBER, SUPPLIER_NAME, IS_LOCKED, LOAD_DATE_TIME, UPDATE_DATE_TIME)
+                    VALUES (
+                        {element['supplier_id']}, 
+                        '{element['supplier_number']}', 
+                        '{element['supplier_name']}', 
+                        {element['is_locked']}, 
+                        '{element['load_date_time']}', 
+                        '{element['update_date_time']}')
+                    ON CONFLICT(SUPPLIER_ID)
+                    DO UPDATE SET
+                        SUPPLIER_NUMBER=EXCLUDED.SUPPLIER_NUMBER,
+                        SUPPLIER_NAME=EXCLUDED.SUPPLIER_NAME,
+                        IS_LOCKED=EXCLUDED.IS_LOCKED,
+                        UPDATE_DATE_TIME=EXCLUDED.UPDATE_DATE_TIME
+                    WHERE 
+                        SUPPLIER.UPDATE_DATE_TIME < EXCLUDED.UPDATE_DATE_TIME
+                    RETURNING *;"""
+                )
+                result = cur.fetchone()
+                if result:
+                    print("Database updated for supplier_id: {0}".format(element['supplier_id']))
+                else:
+                    print("No updates were made to the database for supplier_id: {0}".format(element['supplier_id']))
         
+        yield element
+                
+                
 class EncodeMessage(beam.DoFn):
     
     def process(self, element):
-        encoded_message = (element["chassis_id"].encode('utf-8'), json.dumps(element).encode('utf-8'))
+        encoded_message = (element["supplier_id"].encode('utf-8'), json.dumps(element).encode('utf-8'))
         yield encoded_message
 
 consumer_config_kafka_local = {
@@ -75,7 +104,9 @@ dataflow_options = PipelineOptions([
 
 dataflow_options.view_as(StandardOptions).streaming = True
 
-kafka_input_topics = ["input_topic_1", "input_topic_2"]
+kafka_input_topics = ["input_topic"]
+
+db_uri = "postgresql://postgres:postgres@localhost:5432/postgres"
 
 with beam.Pipeline(options=local_runner_options) as p:
     kafka_streams_pcoll = ()
@@ -96,7 +127,7 @@ with beam.Pipeline(options=local_runner_options) as p:
     (
         kafka_streams_pcoll 
         | "PCollection Flatten" >> beam.Flatten()
-        | "ProcessMessage" >> beam.ParDo(ProcessMessage())
+        | "ProcessMessage" >> beam.ParDo(ProcessMessage(uri=db_uri))
         | "EncodeMessage" >> beam.ParDo(EncodeMessage()).with_output_types(tuple[bytes, bytes])
         | WriteToKafka(
             producer_config={"bootstrap.servers": "localhost:9092"},

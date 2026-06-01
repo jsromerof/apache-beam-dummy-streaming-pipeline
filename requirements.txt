@@ -1,2 +1,4 @@
 apache-beam[gcp]==2.71.0
 confluent-kafka==2.14.0
+psycopg-binary==3.3.4
+psycopg==3.3.4
