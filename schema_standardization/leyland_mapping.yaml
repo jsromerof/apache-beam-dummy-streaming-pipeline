@@ -1,0 +1,17 @@
+id: supplier_id
+name: supplier_name
+vendor_list:
+  _source: supplier_data
+  _items:
+    vendor: vendor_id
+    name: vendor_name
+    leyland_code: leyland_vendor_code
+    DAF_code: DAF_vendor_code
+    creation_date: creation_date
+    last_update_date: last_update_date
+    street1: address.street1
+    street2: address.street2
+    street3: address.street3
+    postal_code: address.postal_code
+    city: address.city
+    country: address.country

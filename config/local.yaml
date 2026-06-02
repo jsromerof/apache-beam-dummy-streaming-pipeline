@@ -1,7 +1,3 @@
-app_name: "supplier_data_pipeline"
-version: "1.0.0"
-environment: "development"  # development, staging, production
-
 kafka_consumer_config:
   bootstrap.servers": localhost:9092
   auto.offset.reset": latest
@@ -9,43 +5,9 @@ kafka_consumer_config:
   
 topics:
   - topic: "leyland_topic"
-    consumer_group: "leyland_consumer_group"
-    standardization_mapping:
-      id: supplier_id
-      name: supplier_name
-      vendor_list:
-        _source: supplier_data
-        _items:
-          vendor: vendor_id
-          name: vendor_name
-          leyland_code: leyland_vendor_code
-          DAF_code: DAF_vendor_code
-          creation_date: creation_date
-          last_update_date: last_update_date
-          street1: address.street1
-          street2: address.street2
-          street3: address.street3
-          postal_code: address.postal_code
-          city: address.city
-          country: address.country
+    consumer_group: 'leyland_consumer_group'
+    standardization_mapping_file: "schema_standardization/leyland_mapping.yaml"
 
   - topic: "australia_topic"
     consumer_group: "australia_consumer_group"
-    standardization_mapping:
-      id: supplier_id
-      name: supplier_name
-      vendor_list:
-        _source: supplier_data
-        _items:
-          vendor: vendor_id
-          name: vendor_name
-          leyland_code: leyland_vendor_code
-          DAF_code: DAF_vendor_code
-          creation_date: creation_date
-          last_update_date: last_update_date
-          street1: address.street1
-          street2: address.street2
-          street3: address.street3
-          postal_code: address.postal_code
-          city: address.city
-          country: address.country
+    standardization_mapping_file: "schema_standardization/australia_mapping.yaml"

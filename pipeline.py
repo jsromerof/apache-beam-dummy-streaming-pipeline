@@ -51,34 +51,6 @@ local_runner_options = PipelineOptions([
 
 local_runner_options.view_as(StandardOptions).streaming = True
 
-mapping_config = {
-            'leyland': {
-                'id': 'supplier_id', 
-                'name': 'supplier_name', 
-                'vendor_list': {
-                    '_source': 'supplier_data', 
-                    '_items': {
-                        'vendor': 'vendor_id', 
-                        'name': 'vendor_name', 
-                        'leyland_code': 'leyland_vendor_code', 
-                        'DAF_code': 'DAF_vendor_code', 
-                        'creation_date': 'creation_date', 
-                        'last_update_date': 'last_update_date', 
-                        'address': {
-                            'street1': 'address.street1', 
-                            'street2': 'address.street2', 
-                            'street3': 'address.street3', 
-                            'location': {
-                                'postal_code': 'address.postal_code', 
-                                'city': 'address.city', 
-                                'country': 'address.country'
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
 
 def get_config_file(file_path):
     with open(file_path, "r") as file:
@@ -89,7 +61,7 @@ def get_config_file(file_path):
 def load_mapping_dict(config: dict) -> dict:
         mapping_config = {}       
         for item in config.get("topics", []):
-            mapping_config[item["topic"]] = item["standardization_mapping"]
+            mapping_config[item["topic"]] = config=get_config_file(item["standardization_mapping_file"])
         
         return mapping_config
     
@@ -102,10 +74,11 @@ with beam.Pipeline(options=local_runner_options) as p:
     kafka_streams_pcoll = ()
     kafka_consumer_config = config["kafka_consumer_config"]
     for topic in config["topics"]:
+        kafka_consumer_config.update({"group.id": topic["consumer_group"]})
         kafka_input_stream = (
             p
             | "Read from {0}".format(topic["topic"]) >> ReadFromKafka(
-                consumer_config=kafka_consumer_config + topic["consumer_group"],
+                consumer_config=consumer_config_kafka_local,
                 topics=[topic["topic"]],
                 max_num_records=1,
                 with_metadata=True,

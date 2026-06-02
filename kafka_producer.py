@@ -14,7 +14,7 @@ def delivery_report(err, msg):
 
 # Produce a message
 test_message = {
-    "topic" : "input_topic",
+    "topic" : "leyland_topic",
     "supplier_id":   "1",
     "supplier_name": "supplier_1",
     "supplier_data": [
@@ -68,7 +68,7 @@ test_message = {
         }
     ]
 }
-p.produce("input_topic", json.dumps(test_message), callback=delivery_report)
+p.produce("leyland_topic", json.dumps(test_message), callback=delivery_report)
 
 # Wait for any outstanding messages to be delivered
 p.flush()

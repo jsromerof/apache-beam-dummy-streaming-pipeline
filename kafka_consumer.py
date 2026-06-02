@@ -10,7 +10,7 @@ conf = {
     'session.timeout.ms': 6000
 }
 
-topic = 'output_topic'
+topic = 'leyland_topic'
 
 # Create a new Consumer instance
 consumer = Consumer(conf)
