@@ -56,7 +56,7 @@ services:
     environment:
       CLUSTER_ID : 1
     volumes:
-      - ./kafka-init/kafka-init.sh:/kafka-init.sh
+      - ./kafka-init-scripts/kafka-init.sh:/kafka-init.sh
     entrypoint: ["/bin/sh", "/kafka-init.sh"]
 
   expansion-service:

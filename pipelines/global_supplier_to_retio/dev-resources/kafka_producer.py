@@ -1,9 +1,21 @@
 import json
+import os
 
 from confluent_kafka import Producer
 
 # Configure the producer
-p = Producer({'bootstrap.servers': 'localhost:9092'})
+local_conf = {
+    'bootstrap.servers': 'localhost:9092'
+}
+
+cloud_conf = {
+    "bootstrap.servers": f"{os.getenv('KAFKA_BOOTSTRAP_SERVERS')}",
+    "sasl.jaas.config": f'org.apache.kafka.common.security.plain.PlainLoginModule required serviceName="Kafka" username="{os.getenv("KAFKA_USERNAME")}" password="{os.getenv("KAFKA_PASSWORD")}";', 
+    "security.protocol": "SASL_SSL",
+    "sasl.mechanism": "SCRAM-SHA-512"
+}
+
+p = Producer(local_conf)
 
 def delivery_report(err, msg):
     """ Called once for each message transmitted to provide delivery results. """
@@ -14,7 +26,7 @@ def delivery_report(err, msg):
 
 # Produce a message
 test_message = {
-    "topic" : "leyland_topic",
+    "topic" : "australia_topic",
     "supplier_id":   "1",
     "supplier_name": "supplier_1",
     "supplier_data": [
@@ -68,7 +80,7 @@ test_message = {
         }
     ]
 }
-p.produce("leyland_topic", json.dumps(test_message), callback=delivery_report)
+p.produce("australia_topic", json.dumps(test_message), callback=delivery_report)
 
 # Wait for any outstanding messages to be delivered
 p.flush()

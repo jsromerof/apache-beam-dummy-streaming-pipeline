@@ -1,0 +1,16 @@
+kafka_consumer_config:
+  bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS
+  sasl.jaas.config": f'org.apache.kafka.common.security.plain.PlainLoginModule required serviceName="Kafka" username="{KAFKA_USERNAME}" password="{KAFKA_PASSWORD}";'
+  security.protocol": SECURITY_PROTOCOL
+  sasl.mechanism": SASL_MECHANISM
+  auto.offset.reset": "earliest"
+  enable.auto.commit": "false"
+  
+topics:
+  - topic: "leyland_topic"
+    consumer_group: 'leyland_consumer_group'
+    standardization_mapping_file: "schema_standardization/leyland_mapping.yaml"
+
+  - topic: "australia_topic"
+    consumer_group: "australia_consumer_group"
+    standardization_mapping_file: "schema_standardization/australia_mapping.yaml"

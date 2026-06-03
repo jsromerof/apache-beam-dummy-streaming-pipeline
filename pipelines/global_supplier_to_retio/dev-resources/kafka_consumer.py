@@ -1,8 +1,9 @@
 from confluent_kafka import Consumer, KafkaException, KafkaError
 import sys
+import os
 
 
-conf = {
+local_conf = {
     'bootstrap.servers': 'localhost:9092',
     'group.id': 'consumer-group-1',
     'auto.offset.reset': 'earliest', # Start consuming from the beginning of the topic if no offset is stored
@@ -10,16 +11,26 @@ conf = {
     'session.timeout.ms': 6000
 }
 
-topic = 'leyland_topic'
+cloud_conf = consumer_config_kafka_cloud = {
+    "bootstrap.servers": f"{os.getenv('KAFKA_BOOTSTRAP_SERVERS')}",
+    "group.id": "consumer-group-1",
+    "sasl.jaas.config": f'org.apache.kafka.common.security.plain.PlainLoginModule required serviceName="Kafka" username="{os.getenv("KAFKA_USERNAME")}" password="{os.getenv("KAFKA_PASSWORD")}";',
+    "security.protocol": "SASL_SSL",
+    "sasl.mechanism": "SCRAM-SHA-512",
+    "auto.offset.reset": "earliest",
+    "enable.auto.commit": "false"
+}
+
+TOPIC = 'australia_topic'  # Change this to your topic name
 
 # Create a new Consumer instance
-consumer = Consumer(conf)
+consumer = Consumer(local_conf)
 
 try:
     # Subscribe to the topic
-    consumer.subscribe([topic])
+    consumer.subscribe([TOPIC])
 
-    print(f"Consumer started. Subscribed to topic: {topic}. Waiting for messages...")
+    print(f"Consumer started. Subscribed to topic: {TOPIC}. Waiting for messages...")
 
     while True:
         # Poll for messages with a timeout of 1.0 second

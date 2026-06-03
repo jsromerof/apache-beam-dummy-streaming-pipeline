@@ -3,7 +3,7 @@ from apache_beam.io.kafka import ReadFromKafka, WriteToKafka
 from apache_beam.options.pipeline_options import PipelineOptions, StandardOptions
 import json
 import yaml
-from src.schema_standardizer import SchemaStandardizer
+from pipelines.global_supplier_to_retio.src.schema_standardizer import SchemaStandardizer
 
 class DecodeMessage(beam.DoFn):
     
@@ -26,7 +26,7 @@ consumer_config_kafka_local = {
 }
 
 
-KAFKA_BOOTSTRAP_SERVERS="prod-broker.us-west1.gcp.confluent.cloud:9092"
+KAFKA_BOOTSTRAP_SERVERS="dev-broker.us-west1.gcp.confluent.cloud:9092"
 CONSUMER_GROUP_ID="consumer-group-1"
 KAFKA_USERNAME="username"
 KAFKA_PASSWORD="password"
@@ -65,7 +65,7 @@ def load_mapping_dict(config: dict) -> dict:
         
         return mapping_config
     
-config=get_config_file("config/local.yaml")
+config=get_config_file("pipelines/global_supplier_to_retio/parametrization/LOCAL/config.yaml")
 mapping_config = load_mapping_dict(config=config)
 topics = list(mapping_config.keys())
     

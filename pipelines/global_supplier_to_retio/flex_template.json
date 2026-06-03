@@ -1,0 +1,16 @@
+{
+  "name": "Python flex template",
+  "description": "",
+  "parameters": [
+      {
+          "name": "params_file_path",
+          "label": "params_file_path",
+          "helpText": "Example: /<repo-name>/pipelines/<pipeline-name>/<environment>/pipeline_params.yaml"
+      },
+      {
+          "name": "bucket_name",
+          "label": "bucket_name",
+          "helpText": "Example: apache_beam_bucket"
+      }
+  ]
+}

@@ -6,8 +6,8 @@ kafka_consumer_config:
 topics:
   - topic: "leyland_topic"
     consumer_group: 'leyland_consumer_group'
-    standardization_mapping_file: "schema_standardization/leyland_mapping.yaml"
+    standardization_mapping_file: "pipelines/global_supplier_to_retio/schema_standardization/leyland_mapping.yaml"
 
   - topic: "australia_topic"
     consumer_group: "australia_consumer_group"
-    standardization_mapping_file: "schema_standardization/australia_mapping.yaml"
+    standardization_mapping_file: "pipelines/global_supplier_to_retio/schema_standardization/australia_mapping.yaml"
