@@ -24,9 +24,10 @@ def delivery_report(err, msg):
     else:
         print(f'Message delivered to {msg.topic()} [{msg.partition()}]')
 
+TOPIC="australia_topic"
 # Produce a message
 test_message = {
-    "topic" : "australia_topic",
+    "topic" : TOPIC,
     "supplier_id":   "1",
     "supplier_name": "supplier_1",
     "supplier_data": [
@@ -80,7 +81,8 @@ test_message = {
         }
     ]
 }
-p.produce("australia_topic", json.dumps(test_message), callback=delivery_report)
+
+p.produce(TOPIC, json.dumps(test_message), callback=delivery_report)
 
 # Wait for any outstanding messages to be delivered
 p.flush()

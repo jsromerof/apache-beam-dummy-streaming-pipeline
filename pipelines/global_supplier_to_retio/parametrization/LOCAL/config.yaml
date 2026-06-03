@@ -1,13 +1,24 @@
-kafka_consumer_config:
-  bootstrap.servers": localhost:9092
-  auto.offset.reset": latest
-  enable.auto.commit": true
-  
-topics:
-  - topic: "leyland_topic"
-    consumer_group: 'leyland_consumer_group'
-    standardization_mapping_file: "pipelines/global_supplier_to_retio/schema_standardization/leyland_mapping.yaml"
+kafka:
+  consumer:
+    config:
+      bootstrap.servers: 'localhost:9092'
+      auto.offset.reset: 'latest'
+    secret:
+      name: 'global_supplier_mdm_kafka'
+      version: 'latest'
+    topics:
+      - topic: "leyland_topic"
+        consumer_group: 'leyland_consumer_group'
+        standardization_mapping_file: "pipelines/global_supplier_to_retio/schema_standardization/leyland_mapping.yaml"
+      - topic: "australia_topic"
+        consumer_group: "australia_consumer_group"
+        standardization_mapping_file: "pipelines/global_supplier_to_retio/schema_standardization/australia_mapping.yaml"
 
-  - topic: "australia_topic"
-    consumer_group: "australia_consumer_group"
-    standardization_mapping_file: "pipelines/global_supplier_to_retio/schema_standardization/australia_mapping.yaml"
+alloydb:
+  database: 
+    lineage: 'lineage'
+  host: 'pos-d-ctd.enterprisedb.dev.paccar.cloud'
+  port: 5432
+  secret:
+    name: 'global_supplier_mdm_alloydb'
+    version: 'latest'

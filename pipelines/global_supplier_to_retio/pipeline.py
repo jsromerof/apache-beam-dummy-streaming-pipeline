@@ -1,9 +1,12 @@
 import apache_beam as beam
+import argparse
 from apache_beam.io.kafka import ReadFromKafka, WriteToKafka
-from apache_beam.options.pipeline_options import PipelineOptions, StandardOptions
 import json
 import yaml
+from typing import List, Tuple
 from pipelines.global_supplier_to_retio.src.schema_standardizer import SchemaStandardizer
+from pipelines.global_supplier_to_retio.utils.gcp_utils import get_project_id
+from pipelines.global_supplier_to_retio.utils.pipeline_utils import configure_pipeline
 
 class DecodeMessage(beam.DoFn):
     
@@ -11,6 +14,7 @@ class DecodeMessage(beam.DoFn):
         raw_value = element.value.decode('utf-8')
         json_data = json.loads(raw_value)
         yield json_data
+      
         
 class EncodeMessage(beam.DoFn):
     
@@ -18,6 +22,8 @@ class EncodeMessage(beam.DoFn):
         encoded_message = (element["id"].encode('utf-8'), json.dumps(element).encode('utf-8'))
         yield encoded_message
 
+
+'''
 consumer_config_kafka_local = {
     "bootstrap.servers": "localhost:9092",
     "group.id": "consumer-group-1",
@@ -35,7 +41,6 @@ SASL_MECHANISM="PLAIN"
 
 consumer_config_kafka_cloud = {
     "bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS,
-    "group.id": CONSUMER_GROUP_ID,
     "sasl.jaas.config": f'org.apache.kafka.common.security.plain.PlainLoginModule required serviceName="Kafka" username="{KAFKA_USERNAME}" password="{KAFKA_PASSWORD}";',
     "security.protocol": SECURITY_PROTOCOL,
     "sasl.mechanism": SASL_MECHANISM,
@@ -50,8 +55,39 @@ local_runner_options = PipelineOptions([
 ])
 
 local_runner_options.view_as(StandardOptions).streaming = True
+'''
 
 
+def get_args() -> Tuple[argparse.Namespace, List]:
+        """Parses script-specific and beam-related arguments.
+
+        Returns:
+            Tuple[argparse.Namespace, List]: (script-specific args, beam args)
+        """
+        parser = argparse.ArgumentParser()
+
+        parser.add_argument(
+            "--params_file_path",
+            required=True,
+            type=str,
+            help="Parameters of the pipeline.",
+        )
+
+        parser.add_argument(
+            "--bucket_name",
+            required=False,
+            default=None,
+            type=str,
+            help="Cloud Storage bucket containing pipeline files.",
+        )
+
+        parser.add_argument(
+            "--testing", action="store_true", help="Enable testing mode."
+        )
+
+        return parser.parse_known_args()
+    
+    
 def get_config_file(file_path):
     with open(file_path, "r") as file:
         config = yaml.safe_load(file)
@@ -59,42 +95,45 @@ def get_config_file(file_path):
 
 
 def load_mapping_dict(config: dict) -> dict:
-        mapping_config = {}       
-        for item in config.get("topics", []):
-            mapping_config[item["topic"]] = config=get_config_file(item["standardization_mapping_file"])
-        
-        return mapping_config
+    mapping_config = {}       
+    for item in config.get("kafka", []).get("consumer", []).get("topics", []):
+        mapping_config[item["topic"]] = config=get_config_file(item["standardization_mapping_file"])
     
-config=get_config_file("pipelines/global_supplier_to_retio/parametrization/LOCAL/config.yaml")
-mapping_config = load_mapping_dict(config=config)
-topics = list(mapping_config.keys())
+    return mapping_config
     
-
-with beam.Pipeline(options=local_runner_options) as p:
-    kafka_streams_pcoll = ()
-    kafka_consumer_config = config["kafka_consumer_config"]
-    for topic in config["topics"]:
-        kafka_consumer_config.update({"group.id": topic["consumer_group"]})
-        kafka_input_stream = (
-            p
-            | "Read from {0}".format(topic["topic"]) >> ReadFromKafka(
-                consumer_config=consumer_config_kafka_local,
-                topics=[topic["topic"]],
-                max_num_records=1,
-                with_metadata=True,
+    
+if __name__ == "__main__":
+    
+    PROJECT = get_project_id()
+    args, beam_args = get_args()
+    config, pipeline_options = configure_pipeline(args=args, beam_args=beam_args)
+    mapping_config = load_mapping_dict(config=config)
+    
+    with beam.Pipeline(options=pipeline_options) as p:
+        streams_pcoll = ()
+        consumer_config = config.get("kafka", {}).get("consumer", {}).get("config", {})
+        for topic in config.get("kafka", {}).get("consumer", {}).get("topics", []):
+            consumer_config.update({"group.id": topic["consumer_group"]})
+            kafka_input_stream = (
+                p
+                | "Read from {0}".format(topic["topic"]) >> ReadFromKafka(
+                    consumer_config=consumer_config,
+                    topics=[topic["topic"]],
+                    max_num_records=1,
+                    with_metadata=True,
+                    expansion_service="localhost:8097"
+                )
+                | "Decode Message from {0}".format(topic["topic"]) >> beam.ParDo(DecodeMessage())
+            )
+            streams_pcoll+=(kafka_input_stream,)
+        ( 
+            streams_pcoll 
+            | "PCollection Flatten" >> beam.Flatten()
+            | "StandardizeSchema" >> beam.ParDo(SchemaStandardizer(mapping_config=mapping_config))
+            | "EncodeMessage" >> beam.ParDo(EncodeMessage()).with_output_types(tuple[bytes, bytes])
+            | WriteToKafka(
+                producer_config={"bootstrap.servers": "localhost:9092"},
+                topic="output_topic",
                 expansion_service="localhost:8097"
             )
-            | "Decode Message from {0}".format(topic["topic"]) >> beam.ParDo(DecodeMessage())
         )
-        kafka_streams_pcoll+=(kafka_input_stream,)
-    ( 
-        kafka_streams_pcoll 
-        | "PCollection Flatten" >> beam.Flatten()
-        | "StandardizeSchema" >> beam.ParDo(SchemaStandardizer(mapping_config=mapping_config))
-        | "EncodeMessage" >> beam.ParDo(EncodeMessage()).with_output_types(tuple[bytes, bytes])
-        | WriteToKafka(
-            producer_config={"bootstrap.servers": "localhost:9092"},
-            topic="output_topic",
-            expansion_service="localhost:8097"
-        )
-    )
