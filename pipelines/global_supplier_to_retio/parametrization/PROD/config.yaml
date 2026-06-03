@@ -21,7 +21,7 @@ kafka:
 alloydb:
   database: 
     lineage: 'lineage'
-  host: 'pos-d-ctd.enterprisedb.dev.paccar.cloud'
+  host: 'pos-d-ctd.enterprisedb.dev.cloud'
   port: 5432
   secret:
     name: 'global_supplier_mdm_alloydb'
