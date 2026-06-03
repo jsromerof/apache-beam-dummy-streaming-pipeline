@@ -24,7 +24,7 @@ def delivery_report(err, msg):
     else:
         print(f'Message delivered to {msg.topic()} [{msg.partition()}]')
 
-TOPIC="australia_topic"
+TOPIC="leyland_topic"
 # Produce a message
 test_message = {
     "topic" : TOPIC,

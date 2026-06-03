@@ -96,7 +96,7 @@ def get_config_file(file_path):
 
 def load_mapping_dict(config: dict) -> dict:
     mapping_config = {}       
-    for item in config.get("kafka", []).get("consumer", []).get("topics", []):
+    for item in config.get("schema_standardization", []):
         mapping_config[item["topic"]] = config=get_config_file(item["standardization_mapping_file"])
     
     return mapping_config
