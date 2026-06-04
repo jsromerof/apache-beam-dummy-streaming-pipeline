@@ -3,9 +3,6 @@ kafka:
     config:
       bootstrap.servers: 'localhost:9092'
       auto.offset.reset: 'latest'
-    secret:
-      name: 'global_supplier_mdm_kafka'
-      version: 'latest'
     topics:
       - topic: "leyland_topic"
         consumer_group: 'leyland_consumer_group'
@@ -14,10 +11,10 @@ kafka:
   producer:
     config:
       bootstrap.servers: 'localhost:9092'
-    secret:
-      name: 'global_supplier_mdm_kafka'
-      version: 'latest'
     topic: 'output_topic'
+  secret:
+    name: 'global_supplier_mdm_kafka'
+    version: 'latest'
 
 schema_standardization:
   - topic: "leyland_topic"

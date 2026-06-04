@@ -4,7 +4,7 @@ from apache_beam.io.kafka import ReadFromKafka, WriteToKafka
 import yaml
 from typing import List, Tuple
 from pipelines.global_supplier_to_retio.src.schema_standardizer import SchemaStandardizer
-from pipelines.global_supplier_to_retio.utils.gcp_utils import get_project_id
+from pipelines.global_supplier_to_retio.utils.gcp_utils import get_project_id, get_secrets
 from pipelines.global_supplier_to_retio.utils.pipeline_utils import configure_pipeline
 from pipelines.global_supplier_to_retio.utils.kafka_utils import DecodeMessage, EncodeMessage
 
@@ -55,16 +55,39 @@ def load_mapping_dict(config: dict) -> dict:
     
 if __name__ == "__main__":
     
+    '''
     PROJECT = get_project_id()
+    Retrieving Kafka credentials from Secret Manager
+    kafka_credentials = get_secrets(
+        PROJECT, 
+        config.get("kafka", {}).get("secret", {}).get("name"), 
+        config.get("kafka", {}).get("secret", {}).get("version")
+    )
+    '''
+    
     args, beam_args = get_args()
     config, pipeline_options = configure_pipeline(args=args, beam_args=beam_args)
     mapping_config = load_mapping_dict(config=config)
     
-    with beam.Pipeline(options=pipeline_options) as p:
-        
+    kafka_credentials = {
+        "user": '',
+        "password": ''
+    }
+    
+    consumer_config = config.get("kafka", {}).get("consumer", {}).get("config", {})
+    consumer_config["sasl.jaas.config"] = consumer_config["sasl.jaas.config"].format(
+        kafka_credentials["user"], kafka_credentials["password"]
+    )
+    producer_config = config.get("kafka", {}).get("producer", {}).get("config", {})
+    producer_config["sasl.jaas.config"] = producer_config["sasl.jaas.config"].format(
+        kafka_credentials["user"], kafka_credentials["password"]
+    )
+    
+    print(consumer_config)
+    print(producer_config)
+    
+    with beam.Pipeline(options=pipeline_options) as p:  
         streams_pcoll = ()
-        consumer_config = config.get("kafka", {}).get("consumer", {}).get("config", {})
-        producer_config = config.get("kafka", {}).get("producer", {}).get("config", {})
         
         for topic in config.get("kafka", {}).get("consumer", {}).get("topics", []):
             consumer_config.update({"group.id": topic["consumer_group"]})

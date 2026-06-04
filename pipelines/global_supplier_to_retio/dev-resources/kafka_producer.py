@@ -9,13 +9,13 @@ local_conf = {
 }
 
 cloud_conf = {
-    "bootstrap.servers": f"{os.getenv('KAFKA_BOOTSTRAP_SERVERS')}",
-    "sasl.jaas.config": f'org.apache.kafka.common.security.plain.PlainLoginModule required serviceName="Kafka" username="{os.getenv("KAFKA_USERNAME")}" password="{os.getenv("KAFKA_PASSWORD")}";', 
+    "bootstrap.servers": "pkc-lgk0v.us-west1.gcp.confluent.cloud:9092",
+    "sasl.jaas.config": 'org.apache.kafka.common.security.plain.PlainLoginModule required serviceName="Kafka" username="" password="";', 
     "security.protocol": "SASL_SSL",
-    "sasl.mechanism": "SCRAM-SHA-512"
+    "sasl.mechanism": "PLAIN"
 }
 
-p = Producer(local_conf)
+p = Producer(cloud_conf)
 
 def delivery_report(err, msg):
     """ Called once for each message transmitted to provide delivery results. """

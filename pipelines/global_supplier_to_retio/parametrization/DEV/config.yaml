@@ -1,22 +1,29 @@
 kafka:
   consumer:
     config:
-      bootstrap.servers: 'pkc-lgk0v.us-west1.gcp.confluent.cloud:9092'
+      bootstrap.servers: 'pkc-lgk0v.us-west1.gcp.confluent.cloud:9092' #stage 'lkc-01dkp5-ap8x5nw0.us-west-2.aws.accesspoint.glb.confluent.cloud:9092' 
       sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required serviceName="Kafka" username="{}" password="{}";'
       security.protocol: 'SASL_SSL'
       sasl.mechanism: 'PLAIN'
       auto.offset.reset: 'latest'
       default.api.timeout.ms: '120000'
-    secret:
+    topics:
+      - topic: "kt_itd_dev_saptmdev_sandbox_input_1_1"
+        consumer_group: k_itd_ren_saptm_dev_svc_dopcmst0_asicustomer
+  producer:
+    config:
+      bootstrap.servers: 'pkc-lgk0v.us-west1.gcp.confluent.cloud:9092' #stage 'lkc-01dkp5-ap8x5nw0.us-west-2.aws.accesspoint.glb.confluent.cloud:9092' 
+      sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required serviceName="Kafka" username="{}" password="{}";'
+      security.protocol: 'SASL_SSL'
+      sasl.mechanism: 'PLAIN'
+    topic: 'output_topic'
+  secret:
       name: 'global_supplier_mdm_kafka'
       version: 'latest'
-    topics:
-      - topic: "leyland_topic"
-        consumer_group: 'leyland_consumer_group'
-        standardization_mapping_file: "pipelines/global_supplier_to_retio/schema_standardization/leyland_mapping.yaml"
-      - topic: "australia_topic"
-        consumer_group: "australia_consumer_group"
-        standardization_mapping_file: "pipelines/global_supplier_to_retio/schema_standardization/australia_mapping.yaml"
+
+schema_standardization:
+  - topic: "kt_itd_dev_saptmdev_sandbox_output_1_1"
+    standardization_mapping_file: "pipelines/global_supplier_to_retio/schema_standardization/leyland_mapping.yaml"
 
 alloydb:
   database: 
