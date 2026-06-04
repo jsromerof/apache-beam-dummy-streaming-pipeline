@@ -11,6 +11,13 @@ kafka:
         consumer_group: 'leyland_consumer_group'
       - topic: "australia_topic"
         consumer_group: "australia_consumer_group"
+  producer:
+    config:
+      bootstrap.servers: 'localhost:9092'
+    secret:
+      name: 'global_supplier_mdm_kafka'
+      version: 'latest'
+    topic: 'output_topic'
 
 schema_standardization:
   - topic: "leyland_topic"
