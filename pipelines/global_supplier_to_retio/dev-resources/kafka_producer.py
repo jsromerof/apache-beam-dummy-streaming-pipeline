@@ -15,7 +15,7 @@ cloud_conf = {
     "sasl.mechanism": "PLAIN"
 }
 
-p = Producer(cloud_conf)
+p = Producer(local_conf)
 
 def delivery_report(err, msg):
     """ Called once for each message transmitted to provide delivery results. """

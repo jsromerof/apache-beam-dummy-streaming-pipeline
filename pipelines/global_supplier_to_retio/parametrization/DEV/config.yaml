@@ -1,28 +1,22 @@
 kafka:
   consumer:
     config:
-      bootstrap.servers: 'pkc-lgk0v.us-west1.gcp.confluent.cloud:9092' #stage 'lkc-01dkp5-ap8x5nw0.us-west-2.aws.accesspoint.glb.confluent.cloud:9092' 
-      sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required serviceName="Kafka" username="{}" password="{}";'
-      security.protocol: 'SASL_SSL'
-      sasl.mechanism: 'PLAIN'
+      bootstrap.servers: 'localhost:9092'
       auto.offset.reset: 'latest'
       default.api.timeout.ms: '120000'
     topics:
-      - topic: "kt_itd_dev_saptmdev_sandbox_input_1_1"
+      - topic: "leyland_topic"
         consumer_group: k_itd_ren_saptm_dev_svc_dopcmst0_asicustomer
   producer:
     config:
-      bootstrap.servers: 'pkc-lgk0v.us-west1.gcp.confluent.cloud:9092' #stage 'lkc-01dkp5-ap8x5nw0.us-west-2.aws.accesspoint.glb.confluent.cloud:9092' 
-      sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required serviceName="Kafka" username="{}" password="{}";'
-      security.protocol: 'SASL_SSL'
-      sasl.mechanism: 'PLAIN'
-    topic: 'output_topic'
+      bootstrap.servers: 'localhost:9092'
+    topic: 'australia_topic'
   secret:
       name: 'global_supplier_mdm_kafka'
       version: 'latest'
 
 schema_standardization:
-  - topic: "kt_itd_dev_saptmdev_sandbox_output_1_1"
+  - topic: "leyland_topic"
     standardization_mapping_file: "pipelines/global_supplier_to_retio/schema_standardization/leyland_mapping.yaml"
 
 alloydb:

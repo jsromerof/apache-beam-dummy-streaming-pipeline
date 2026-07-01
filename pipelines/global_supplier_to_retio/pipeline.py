@@ -1,9 +1,11 @@
 import apache_beam as beam
 import argparse
 from apache_beam.io.kafka import ReadFromKafka, WriteToKafka
+from apache_beam.transforms.util import GroupIntoBatches
 import yaml
 from typing import List, Tuple
 from pipelines.global_supplier_to_retio.src.schema_standardizer import SchemaStandardizer
+from pipelines.global_supplier_to_retio.src.message_batching import MessageBatching
 from pipelines.global_supplier_to_retio.utils.gcp_utils import get_project_id, get_secrets
 from pipelines.global_supplier_to_retio.utils.pipeline_utils import configure_pipeline
 from pipelines.global_supplier_to_retio.utils.kafka_utils import DecodeMessage, EncodeMessage
@@ -75,16 +77,16 @@ if __name__ == "__main__":
     }
     
     consumer_config = config.get("kafka", {}).get("consumer", {}).get("config", {})
-    consumer_config["sasl.jaas.config"] = consumer_config["sasl.jaas.config"].format(
-        kafka_credentials["user"], kafka_credentials["password"]
-    )
+    if "sasl.jaas.config" in consumer_config:
+        consumer_config["sasl.jaas.config"] = consumer_config.get("sasl.jaas.config", "").format(
+            kafka_credentials["user"], kafka_credentials["password"]
+        )
+        
     producer_config = config.get("kafka", {}).get("producer", {}).get("config", {})
-    producer_config["sasl.jaas.config"] = producer_config["sasl.jaas.config"].format(
-        kafka_credentials["user"], kafka_credentials["password"]
-    )
-    
-    print(consumer_config)
-    print(producer_config)
+    if "sasl.jaas.config" in producer_config:
+        producer_config["sasl.jaas.config"] = producer_config.get("sasl.jaas.config", "").format(
+            kafka_credentials["user"], kafka_credentials["password"]
+        )
     
     with beam.Pipeline(options=pipeline_options) as p:  
         streams_pcoll = ()
@@ -96,7 +98,7 @@ if __name__ == "__main__":
                 | "Read from {0}".format(topic["topic"]) >> ReadFromKafka(
                     consumer_config=consumer_config,
                     topics=[topic["topic"]],
-                    max_num_records=1,
+                    max_num_records=3,
                     with_metadata=True,
                     expansion_service="localhost:8097"
                 )
@@ -106,11 +108,17 @@ if __name__ == "__main__":
         ( 
             streams_pcoll 
             | "PCollection Flatten" >> beam.Flatten()
-            | "StandardizeSchema" >> beam.ParDo(SchemaStandardizer(mapping_config=mapping_config))
-            | "EncodeMessage" >> beam.ParDo(EncodeMessage()).with_output_types(tuple[bytes, bytes])
-            | WriteToKafka(
-                producer_config=producer_config,
-                topic=config.get("kafka", {}).get("producer", {}).get("topic"),
-                expansion_service="localhost:8097"
+            | "Add Key" >> beam.Map(lambda x: ("1", x))
+            | "Batch Messages" >> GroupIntoBatches(
+                batch_size=3,
+                max_buffering_duration_secs=5
             )
+            | beam.Map(print)
+#            | "StandardizeSchema" >> beam.ParDo(SchemaStandardizer(mapping_config=mapping_config))
+#            | "EncodeMessage" >> beam.ParDo(EncodeMessage()).with_output_types(tuple[bytes, bytes])
+#            | WriteToKafka(
+#                producer_config=producer_config,
+#                topic=config.get("kafka", {}).get("producer", {}).get("topic"),
+#                expansion_service="localhost:8097"
+#            )
         )
