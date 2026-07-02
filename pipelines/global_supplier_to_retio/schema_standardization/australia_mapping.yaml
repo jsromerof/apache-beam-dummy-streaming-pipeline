@@ -15,3 +15,4 @@ vendor_list:
     postal_code: address.postal_code
     city: address.city
     country: address.country
+    timestamp: timestamp

@@ -30,6 +30,7 @@ test_message = {
     "topic" : TOPIC,
     "supplier_id":   "1",
     "supplier_name": "supplier_1",
+    "timestamp": "2023-10-01T12:00:00.003Z",
     "supplier_data": [
         {
             "vendor_id":           "424216",
@@ -45,39 +46,8 @@ test_message = {
                 "postal_code": "58566",
                 "city":        "Kierspe",
                 "country":     "Germany"
-            }
-        },
-        {
-            "vendor_id":           "528242",
-            "vendor_name":         "OHM HANER METALLWERK GMBH CO KG",
-            "leyland_vendor_code": "003554",
-            "DAF_vendor_code":     "87148",
-            "creation_date":       "2014-10-24T13:01:59",
-            "last_update_date":    "2019-09-19T15:41:47",
-            "address": {
-                "street1":     "Am Jopp 1",
-                "street2":     "Additional Street Info",
-                "street3":     "More Street Info",
-                "postal_code": "58566",
-                "city":        "Kierspe",
-                "country":     "Germany"
-            }
-        },
-        {
-            "vendor_id":           "528243",
-            "vendor_name":         "PETER GFK SPOL SRO",
-            "leyland_vendor_code": "P17032",
-            "DAF_vendor_code":     "86810",
-            "creation_date":       "2014-10-24T13:08:06",
-            "last_update_date":    "2019-09-19T15:41:47",
-            "address": {
-                "street1":     "ul. PETER 1",
-                "street2":     "Additional Street Info",
-                "street3":     "More Street Info",
-                "postal_code": "58566",
-                "city":        "Kierspe",
-                "country":     "Germany"
-            }
+            },
+            "timestamp": "2023-10-01T12:00:00.000Z"
         }
     ]
 }

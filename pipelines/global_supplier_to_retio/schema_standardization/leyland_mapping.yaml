@@ -1,5 +1,6 @@
 id: supplier_id
 name: supplier_name
+timestamp: timestamp
 vendor_list:
   _source: supplier_data
   _items:
@@ -15,3 +16,4 @@ vendor_list:
     postal_code: address.postal_code
     city: address.city
     country: address.country
+    timestamp: timestamp
