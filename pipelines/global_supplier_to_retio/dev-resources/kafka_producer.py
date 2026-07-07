@@ -28,6 +28,7 @@ TOPIC="leyland_topic"
 # Produce a message
 test_message = {
     "topic" : TOPIC,
+    "source": "australia",
     "supplier_id":   "1",
     "supplier_name": "supplier_1",
     "timestamp": "2023-10-01T12:00:00.003Z",

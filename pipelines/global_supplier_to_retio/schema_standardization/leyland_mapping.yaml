@@ -1,6 +1,7 @@
 id: supplier_id
 name: supplier_name
 timestamp: timestamp
+source: source
 vendor_list:
   _source: supplier_data
   _items:

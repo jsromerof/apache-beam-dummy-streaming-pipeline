@@ -1,5 +1,3 @@
-import sys
-
 import apache_beam as beam
 import argparse
 from apache_beam.io.kafka import ReadFromKafka, WriteToKafka
@@ -7,6 +5,7 @@ from apache_beam.transforms.util import GroupIntoBatches
 import logging
 import yaml
 from typing import List, Tuple
+from collections import defaultdict
 from pipelines.global_supplier_to_retio.src.schema_standardizer import SchemaStandardizer
 from pipelines.global_supplier_to_retio.src.get_latest_version import GetLatestVersion
 from pipelines.global_supplier_to_retio.utils.gcp_utils import get_project_id, get_secrets
@@ -92,14 +91,21 @@ if __name__ == "__main__":
         )
         
     class DenormalizeMessage(beam.DoFn):
-
+        
         def process(self, batch):
-            fk_list = []
-            
+            fk_list_map = defaultdict(list)
+            print("---------")
+            print(batch)
             for element in batch:
-                key, message = element
-                fk_list.append(key)
-                yield message
+                print("---------")
+                print(element)
+                source = element['source']
+                fk_list_map[source].append(element['id'])
+                
+            print(fk_list_map)
+                
+            for element in batch:
+                yield element
                 
             
     class ProcessDiscardedMessages(beam.DoFn):
@@ -125,7 +131,7 @@ if __name__ == "__main__":
                 | "Read from {0}".format(topic["topic"]) >> ReadFromKafka(
                     consumer_config=consumer_config,
                     topics=[topic["topic"]],
-                    max_num_records=3,
+                    max_num_records=1,
                     with_metadata=True,
                     expansion_service="localhost:8097"
                 )
@@ -151,13 +157,13 @@ if __name__ == "__main__":
         
         (
             versioned_messages.latest_message
+            | "StandardizeSchema" >> beam.ParDo(SchemaStandardizer(mapping_config=mapping_config))
             | "Group into Batches" >> beam.BatchElements(
-                min_batch_size=3,
+                min_batch_size=1,
                 max_batch_size=3,
                 max_batch_duration_secs=2
             )
             | "Denormalize Message" >> beam.ParDo(DenormalizeMessage())
-            | "StandardizeSchema" >> beam.ParDo(SchemaStandardizer(mapping_config=mapping_config))
             | "EncodeMessage" >> beam.ParDo(EncodeMessage()).with_output_types(tuple[bytes, bytes])
             | WriteToKafka(
                 producer_config=producer_config,

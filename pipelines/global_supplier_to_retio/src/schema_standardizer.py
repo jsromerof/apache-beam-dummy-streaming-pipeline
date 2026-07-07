@@ -53,7 +53,8 @@ class SchemaStandardizer(beam.DoFn):
         self.mapping_config  = mapping_config
     
     def process(self, element):
-        standardized_message = standardize_messsage(element, mapping_config=self.mapping_config)
+        message = element[1]
+        standardized_message = standardize_messsage(message, mapping_config=self.mapping_config)
         yield standardized_message
 
 

@@ -29,9 +29,9 @@ pip install -r pipelines/global_supplier_to_retio/requirements.txt
 ### 5 . Run apache beam pipeline with local runner :
 
 ```bash
-python -m pipelines.global_supplier_to_retio.pipeline --runner=LocalRunner --params_file_path pipelines/global_supplier_to_retio/parametrization/DEV/config.yaml
+python -m pipelines.global_supplier_to_retio.pipeline --runner=LocalRunner --params_file_path pipelines/global_supplier_to_retio/parametrization/LOCAL/config.yaml
 
-python -m pipelines.global_supplier_to_retio.pipeline --runner=PrismRunner --params_file_path pipelines/global_supplier_to_retio/parametrization/DEV/config.yaml
+python -m pipelines.global_supplier_to_retio.pipeline --runner=PrismRunner --params_file_path pipelines/global_supplier_to_retio/parametrization/LOCAL/config.yaml
 
 python -m pipelines.global_supplier_to_retio.pipeline --runner=FlinkRunner --flink_master=localhost:6123 --environment_type=LOOPBACK --params_file_path pipelines/global_supplier_to_retio/parametrization/DEV/config.yaml
 ```
