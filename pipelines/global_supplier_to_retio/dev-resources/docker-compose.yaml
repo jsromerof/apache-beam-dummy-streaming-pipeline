@@ -1,15 +1,6 @@
 version: '3.8'
 
 services:
-  jobmanager:
-      image: flink:latest
-      container_name: jobmanager
-      ports:
-        - "8081:8081" # Web UI
-        - "6123:6123" # RPC communication port
-      command: jobmanager
-      environment:
-        - JOB_MANAGER_RPC_ADDRESS=jobmanager
   zookeeper:
     image: confluentinc/cp-zookeeper:7.7.8
     hostname: zookeeper
@@ -87,6 +78,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./posgtres-init-scripts:/docker-entrypoint-initdb.d
 
 volumes:
   postgres_data:
